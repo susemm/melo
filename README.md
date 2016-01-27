@@ -1,9 +1,10 @@
-uvx
+melo
 ===
+Forked from https://github.com/liigo/uvx.
 
 A libuv based network extension library focusing on usability.
 
-Please ref [uvx.h](uvx.h) for detailed document.
+Please ref [melo.h](melo.h) for detailed document.
 
 ## Build
 
