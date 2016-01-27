@@ -1,4 +1,5 @@
-#include "../uvx.h"
+#include "../melo_log.h"
+#include "../melo_server.h"
 #include "../loge/loge.h"
 #include <time.h>
 
@@ -14,8 +15,9 @@ static const char* localtimestr(int time) {
 	return (const char*)timestr_buf;
 }
 
-static void on_recv(uvx_udp_t* xudp, void* data, ssize_t datalen, const struct sockaddr* addr, unsigned int flag) {
-    char ip[16]; int port; uvx_get_ip_port(addr, ip, sizeof(ip), &port);
+static void on_recv(melo_udp_t * xudp, void* data, ssize_t datalen, const struct sockaddr* addr, unsigned int flag) {
+    char ip[16]; int port; 
+    melo_get_ip_port(addr, ip, sizeof(ip), &port);
     printf("recv: %d bytes from %s:%d \n", datalen, ip, port);
 
     char buf[2048];
@@ -39,11 +41,16 @@ static void on_recv(uvx_udp_t* xudp, void* data, ssize_t datalen, const struct s
 
 void main(int argc, char** argv) {
     uv_loop_t* loop = uv_default_loop();
-    uvx_udp_t xudp;
-    uvx_udp_config_t config = uvx_udp_default_config(&xudp);
-    config.on_recv = on_recv;
+    melo_udp_t xudp;
 
-    uvx_udp_start(&xudp, loop, "127.0.0.1", 8004, config);
+    melo_udp_init(&xudp);
+    melo_udp_reg_listener(&xudp, MELO_UDP_ON_RECV, on_recv);
+
+    melo_udp_config_t config = melo_udp_default_config(&xudp);
+    config.ip = "127.0.0.1";
+    config.port = 8004;
+
+    melo_udp_start(&xudp, loop, config);
 
     uv_run(loop, UV_RUN_DEFAULT);
 }

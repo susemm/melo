@@ -1,13 +1,17 @@
 cmake_minimum_required(VERSION 2.6)
 
-PROJECT(uvx_test)
+PROJECT(melo_test)
 
 SET(CMAKE_C_FLAGS "-g -std=gnu99 -pthread -fpic")
 
+INCLUDE_DIRECTORIES(
+	../../../libuv-v1.8.0/include
+)
+
 SET(SERVER_SOURCES
 	../server.c
-	../../uvx.c
-	../../uvx_server.c
+	../../melo.c
+	../../melo_server.c
 	../../utils/automem.c
 	../../utils/linkhash.c
 )
@@ -18,8 +22,8 @@ TARGET_LINK_LIBRARIES(server uv pthread rt)
 
 SET(CLIENT_SOURCES
 	../client.c
-	../../uvx.c
-	../../uvx_client.c
+	../../melo.c
+	../../melo_client.c
 	../../utils/automem.c
 	../../utils/linkhash.c
 )
@@ -30,8 +34,8 @@ TARGET_LINK_LIBRARIES(client uv pthread rt)
 
 SET(UDPECHO_SOURCES
 	../udp-echo.c
-	../../uvx.c
-	../../uvx_udp.c
+	../../melo.c
+	../../melo_udp.c
 	../../utils/automem.c
 	../../utils/linkhash.c
 )
@@ -41,9 +45,9 @@ TARGET_LINK_LIBRARIES(udpecho uv pthread rt)
 
 SET(LOGC_SOURCES
 	../log-client.c
-	../../uvx.c
-	../../uvx_log.c
-	../../uvx_udp.c
+	../../melo.c
+	../../melo_log.c
+	../../melo_udp.c
 	../../loge/loge.c
 	../../utils/automem.c
 	../../utils/linkhash.c
@@ -54,8 +58,8 @@ TARGET_LINK_LIBRARIES(logc uv pthread rt)
 
 SET(LOGS_SOURCES
 	../log-server.c
-	../../uvx.c
-	../../uvx_udp.c
+	../../melo.c
+	../../melo_udp.c
 	../../loge/loge.c
 	../../utils/automem.c
 	../../utils/linkhash.c
