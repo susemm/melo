@@ -12,15 +12,55 @@ int interval = 10; // Seconds
 static void on_heartbeat(melo_client_t * mclient, unsigned int index) 
 {
     static char data[] = 
-    {
-        'u','v','x','-','s','e','r','v','e','r',',','b','y',' ','l','i','i','g','o','\n'
-    };
-    printf("send %d datas\n", bench);
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n"\
+            "melo server/client test........\n";
+    
+    printf("send %d k data\n", bench);
     for(int i = 0; i < bench; i++) 
     {
-        automem_t mem; automem_init(&mem, 32);
-        automem_append_voidp(&mem, data, sizeof(data));
-        melo_send_mem(&mem, (uv_stream_t*)&mclient->uvclient);
+        //automem_t mem; automem_init(&mem, 32);
+        //automem_append_voidp(&mem, data, sizeof(data));
+        //melo_send_mem((uv_stream_t *)&mclient->uvclient, &mem);
+        melo_send_to_stream((uv_stream_t *)&mclient->uvclient, data, sizeof(data));
     }
 }
 

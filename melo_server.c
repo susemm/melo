@@ -21,13 +21,13 @@ static void _check_timeout_clients(melo_server_t * mserver);
 
 void melo_server_init(melo_server_t * mserver)
 {
-    MELO_ASSERT(mserver != NULL, "xserver is NULL");
+    MELO_ASSERT(mserver != NULL, "mserver is NULL");
     memset(mserver, 0, sizeof(melo_server_t));
 }
 
 void melo_server_reg_listener(melo_server_t * mserver, melo_server_listener_t type, void * listener)
 {
-    MELO_ASSERT(mserver != NULL, "xserver is NULL");
+    MELO_ASSERT(mserver != NULL, "mserver is NULL");
     MELO_ASSERT(type < UVX_S_ON_MAX, "invalid type");
 
 #ifdef MELO_CB
@@ -48,7 +48,7 @@ melo_server_config_t melo_server_default_config(melo_server_t * mserver)
 {
     melo_server_config_t config = { 0 };
 
-    snprintf(config.name, sizeof(config.name), "xserver-%p", mserver);
+    snprintf(config.name, sizeof(config.name), "mserver-%p", mserver);
     config.conn_count = 1024;
     config.conn_backlog = 128;
     config.conn_extra_size = 0;
@@ -91,13 +91,13 @@ int melo_server_start(melo_server_t * mserver, uv_loop_t* loop, melo_server_conf
         char timestr[32]; time_t t; time(&t);
         strftime(timestr, sizeof(timestr), "[%Y-%m-%d %X]", localtime(&t)); // C99 only: %F = %Y-%m-%d
         MELO_INFO(config.log_out,
-                "[uvx-server] %s %s listening on %s:%d ...\n",
+                "[melo-server] %s %s listening on %s:%d ...\n",
                 timestr, mserver->config.name, mserver->config.ip, mserver->config.port);
     }
     else
     {
         MELO_ERR(config.log_err,
-                "\n!!! [uvx-server] %s listen on %s:%d failed: %s\n",
+                "\n!!! [melo-server] %s listen on %s:%d failed: %s\n",
                 mserver->config.name, mserver->config.ip, mserver->config.port, uv_strerror(ret));
     }
 
@@ -175,7 +175,7 @@ static void _cb_on_read(uv_stream_t* uvclient, ssize_t nread, const uv_buf_t* bu
     else if(nread < 0)
     {
         MELO_ERR(mserver->config.log_err,
-                "\n!!! [uvx-server] %s on recv error: %s\n",
+                "\n!!! [melo-server] %s on recv error: %s\n",
                 mserver->config.name, uv_strerror(nread));
 
         _disconnect_client(uvclient);
@@ -189,7 +189,7 @@ static void _cb_on_connection(uv_stream_t* uvserver, int status)
     assert(mserver);
     if(status == 0)
     {
-        MELO_INFO(mserver->config.log_out, "[uvx-server] %s on connection\n", mserver->config.name);
+        MELO_INFO(mserver->config.log_out, "[melo-server] %s on connection\n", mserver->config.name);
 
         assert(uvserver == (uv_stream_t*) &mserver->uvserver);
         assert(mserver->config.conn_extra_size >= 0);
@@ -226,7 +226,7 @@ static void _cb_on_connection(uv_stream_t* uvserver, int status)
     else
     {
         MELO_INFO(mserver->config.log_err,
-                "\n!!! [uvx-server] %s on connection error: %s\n",
+                "\n!!! [melo-server] %s on connection error: %s\n",
                 mserver->config.name, uv_strerror(status));
     }
 }
@@ -252,7 +252,7 @@ static void _cb_on_supervisor_timer(uv_timer_t* handle)
     unsigned int index = mserver->supervisor_index++;
 
     MELO_INFO(mserver->config.log_out,
-            "[uvx-server] %s on supervisor (index %u)\n",
+            "[melo-server] %s on supervisor (index %u)\n",
             mserver->config.name,
             index);
 
@@ -295,7 +295,7 @@ static void _check_timeout_clients(melo_server_t * mserver)
         if(uv_now(mserver->uvloop) - conn->last_comm_time > conn_timeout)
         {
             MELO_INFO(mserver->config.log_out,
-                    "[uvx-server] %s close connection %p for its long time silence\n",
+                    "[melo-server] %s close connection %p for its long time silence\n",
                     mserver->config.name,
                     &conn->uvclient);
             _disconnect_client((uv_stream_t*) &conn->uvclient); // will delete connection

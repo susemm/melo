@@ -16,8 +16,6 @@ extern "C"  {
     MELO_CB(UVX_C_ON_RECV,         on_recv,           void (*on_recv)(melo_client_t *, void *, ssize_t)) \
 
 
-//TODO: combine UVX_C_ON_CONNECT_* to UVX_C_ON_CONNECT
-
 typedef struct melo_client_config_s
 {
     char    name[32];               /* the xclient's name (with-ending-'\0') */
@@ -48,9 +46,9 @@ typedef struct melo_client_s
     MELO_C_CBs
 
     uv_connect_t        conn;                  // sizeof(uv_connect_t) == 64
-    melo_sockaddr_t server_addr;            // sizeof(uvx_sockaddr_4_6_t) == 28
-    uv_timer_t          heartbeat_timer;         // sizeof(uv_timer_t) == 120
-    unsigned int        heartbeat_index;
+    melo_sockaddr_t     server_addr;            // sizeof(uvx_sockaddr_4_6_t) == 28
+    uv_timer_t          supervisor_timer;         // sizeof(uv_timer_t) == 120
+    unsigned int        supervisor_index;
     bool_t              connection_closed; /* indicate connection closed or not */
 
     void* data;

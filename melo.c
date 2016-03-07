@@ -100,22 +100,20 @@ const char * melo_get_tcp_ip_port(uv_tcp_t* uvclient, char* ipbuf, int buflen, i
 
 
 // Note: after this call, do not use `data` anymore, its memory will be `free`ed later.
-int melo_send_to_stream(uv_stream_t* stream, void* data, unsigned int size) 
+int melo_send_to_stream(uv_stream_t * stream, void * data, unsigned int size) 
 {
     // puts("uvx_send_to_stream()\n");
     assert(stream && data);
     uv_buf_t buf = { .base = (char*)data, .len = (size_t)size };
-    uv_write_t* w = (uv_write_t*) malloc(sizeof(uv_write_t));
+    uv_write_t * w = (uv_write_t*) malloc(sizeof(uv_write_t));
     memset(w, 0, sizeof(uv_write_t));
     w->data = data; // free it in uvx_after_send_to_stream()
     return (uv_write(w, stream, &buf, 1, _cb_after_send_to_stream) == 0 ? 1 : 0);
 }
 
-
-
 // Deprecated, use uvx_send_to_stream() instead.
 // Note: after invoke uvx_send_mem(), do not use mem anymore, its memory will be freed later.
-int melo_send_mem(automem_t* mem, uv_stream_t* stream) 
+int melo_send_mem(uv_stream_t * stream, automem_t * mem) 
 {
     // puts("uvx_send_mem()\n");
     assert(mem && mem->pdata);
@@ -137,9 +135,10 @@ void melo_alloc_buf(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 //-----------------------------------------------------------------------------
 // internal functions
 
-static void _cb_after_send_mem(uv_write_t* w, int status) 
+static void _cb_after_send_mem(uv_write_t * w, int status) 
 {
-    MELO_ASSERT(status, "\n!!! [melo] _cb_after_send_mem(,-1) failed");
+    MELO_ASSERT(NULL != w, "w is NULL");
+    MELO_ASSERT(OK == status, "_cb_after_send_mem failed");
 
     //see uxv_send_mem()
     automem_t mem;
@@ -149,12 +148,13 @@ static void _cb_after_send_mem(uv_write_t* w, int status)
     free(w);
 }
 
-static void _cb_after_send_to_stream(uv_write_t* w, int status) 
+static void _cb_after_send_to_stream(uv_write_t * w, int status) 
 {
-    MELO_ASSERT(status, "\n!!! [melo] melo_after_send_to_stream(,-1) failed");
+    MELO_ASSERT(NULL != w, "w is NULL");
+    MELO_ASSERT(OK == status, "_cb_after_send_to_stream failed");
     
     //see uvx_send_to_stream()
-    free(w->data);
+    //free(w->data);
     free(w);
 }
 

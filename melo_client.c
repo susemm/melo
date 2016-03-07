@@ -13,7 +13,7 @@
 
 static int _client_reconnect(melo_client_t * mclient);
 static void _client_close(melo_client_t* mclient);
-static void _cb_on_heartbeat_timer(uv_timer_t* handle);
+static void _cb_on_supervisor_timer(uv_timer_t* handle);
 static void _cb_after_close_client(uv_handle_t* handle);
 static void _cb_on_client_read(uv_stream_t* uvserver, ssize_t nread, const uv_buf_t* buf);
 static void _cb_on_connect(uv_connect_t* conn, int status);
@@ -21,13 +21,13 @@ static void _cb_on_connect(uv_connect_t* conn, int status);
 
 void melo_client_init(melo_client_t * mclient)
 {
-    MELO_ASSERT(mclient != NULL, "xclient is NULL");
+    MELO_ASSERT(mclient != NULL, "mclient is NULL");
     memset(mclient, 0, sizeof(melo_client_t));
 }
 
 void melo_client_reg_listener(melo_client_t * mclient, melo_client_listener_t type, void * listener)
 {
-    MELO_ASSERT(mclient != NULL, "xserver is NULL");
+    MELO_ASSERT(mclient != NULL, "mclient is NULL");
     MELO_ASSERT(type < MELO_C_ON_MAX, "invalid type");
 
 #ifdef MELO_CB
@@ -48,7 +48,7 @@ void melo_client_reg_listener(melo_client_t * mclient, melo_client_listener_t ty
 melo_client_config_t melo_client_default_config(melo_client_t* mclient)
 {
     melo_client_config_t config = { 0 };
-    snprintf(config.name, sizeof(config.name), "xclient-%p", mclient);
+    snprintf(config.name, sizeof(config.name), "mclient-%p", mclient);
     config.auto_connect = TRUE;
     config.supervisor_interval_ms = 60 * 1000;
     config.log_out = stdout;
@@ -59,7 +59,7 @@ melo_client_config_t melo_client_default_config(melo_client_t* mclient)
 
 int melo_client_connect(melo_client_t * mclient, uv_loop_t * loop, melo_client_config_t config)
 {
-    MELO_ASSERT_RET(NULL != mclient, "xclient is null", 0);
+    MELO_ASSERT_RET(NULL != mclient, "mclient is null", 0);
     MELO_ASSERT_RET(NULL != loop, "loop is null", 0);
 
     mclient->uvloop = loop;
@@ -73,40 +73,40 @@ int melo_client_connect(melo_client_t * mclient, uv_loop_t * loop, melo_client_c
     int ret = _client_reconnect(mclient);
 
     int timeout = config.supervisor_interval_ms; // in milliseconds
-    mclient->heartbeat_index = 0;
-    mclient->heartbeat_timer.data = mclient;
-    uv_timer_init(loop, &(mclient->heartbeat_timer));
-    uv_timer_start(&(mclient->heartbeat_timer), _cb_on_heartbeat_timer, timeout, timeout);
+    mclient->supervisor_index = 0;
+    mclient->supervisor_timer.data = mclient;
+    uv_timer_init(loop, &(mclient->supervisor_timer));
+    uv_timer_start(&(mclient->supervisor_timer), _cb_on_supervisor_timer, timeout, timeout);
 
     return ret;
 }
 
 int melo_client_disconnect(melo_client_t * mclient)
 {
-    MELO_ASSERT_RET(NULL != mclient, "xclient is null", ERROR);
+    MELO_ASSERT_RET(NULL != mclient, "mclient is null", ERROR);
     _client_close(mclient);
     return 1;
 }
 
 int melo_client_shutdown(melo_client_t * mclient)
 {
-    MELO_ASSERT_RET(NULL != mclient, "xclient is null", ERROR);
-    uv_timer_stop(&(mclient->heartbeat_timer));
+    MELO_ASSERT_RET(NULL != mclient, "mclient is null", ERROR);
+    uv_timer_stop(&(mclient->supervisor_timer));
     _client_close(mclient);
     return 1;
 }
 
 int melo_client_send(melo_client_t * mclient, void * data, unsigned int size)
 {
-    MELO_ASSERT_RET(NULL != mclient, "xclient is null", 0);
-    MELO_ASSERT_RET(NULL != mclient->uvserver, "xclient->uvserver is null", 0);
+    MELO_ASSERT_RET(NULL != mclient, "mclient is null", 0);
+    MELO_ASSERT_RET(NULL != mclient->uvserver, "mclient->uvserver is null", 0);
 
     return melo_send_to_stream((uv_stream_t*)mclient->uvserver, data, size);
 }
 
 static int _client_reconnect(melo_client_t * mclient)
 {
-    MELO_ASSERT_RET(NULL != mclient, "xclient is null", ERROR);
+    MELO_ASSERT_RET(NULL != mclient, "mclient is null", ERROR);
 
     mclient->uvserver = NULL;
     mclient->connection_closed = FALSE;
@@ -117,13 +117,13 @@ static int _client_reconnect(melo_client_t * mclient)
     if(ret >= 0)
     {
         MELO_INFO(mclient->config.log_out,
-                "[uvx-client] %s connect to server ...\n",
+                "[melo-client] %s connect to server ...\n",
                 mclient->config.name);
     }
     else
     {
         MELO_ERR(mclient->config.log_err,
-                "\n!!! [uvx-client] %s connect failed: %s\n",
+                "\n!!! [melo-client] %s connect failed: %s\n",
                 mclient->config.name, uv_strerror(ret));
     }
     return (ret >= 0 ? 1 : 0);
@@ -131,10 +131,10 @@ static int _client_reconnect(melo_client_t * mclient)
 
 static void _client_close(melo_client_t * mclient)
 {
-    MELO_ASSERT(NULL != mclient, "xclient is null");
+    MELO_ASSERT(NULL != mclient, "mclient is null");
 
     MELO_INFO(mclient->config.log_out,
-            "[uvx-client] %s on close\n",
+            "[melo-client] %s on close\n",
             mclient->config.name);
 
     MELO_LISTENER(mclient->on_conn_closing, mclient);
@@ -146,16 +146,16 @@ static void _client_close(melo_client_t * mclient)
     // uv_close((uv_handle_t*)&_context.heartbeat_timer, NULL);
 }
 
-static void _cb_on_heartbeat_timer(uv_timer_t * handle)
+static void _cb_on_supervisor_timer(uv_timer_t * handle)
 {
     melo_client_t * mclient = (melo_client_t *) handle->data;
-    MELO_ASSERT(NULL != mclient, "xclient is null");
+    MELO_ASSERT(NULL != mclient, "mclient is null");
 
     if (mclient->uvserver)
     {
-        unsigned int index = mclient->heartbeat_index++;
+        unsigned int index = mclient->supervisor_index++;
         MELO_INFO(mclient->config.log_out,
-                "[uvx-client] %s on heartbeat (index %u)\n",
+                "[melo-client] %s on supervisor (index %u)\n",
                 mclient->config.name, index);
         MELO_LISTENER(mclient->on_supervisor, mclient, index)
     }
@@ -194,7 +194,7 @@ static void _cb_on_client_read(uv_stream_t * uvserver, ssize_t nread, const uv_b
         uv_read_stop(uvserver);
 
         MELO_ERR(mclient->config.log_err,
-                "\n!!! [uvx-client] %s on recv error: %s\n",
+                "\n!!! [melo-client] %s on recv error: %s\n",
                 mclient->config.name, uv_strerror(nread));
 
         _client_close(mclient); // will try reconnect on next uvx__on_heartbeat_timer()
@@ -211,7 +211,7 @@ static void _cb_on_connect(uv_connect_t* conn, int status)
     if(OK == status)
     {
         MELO_INFO(mclient->config.log_out,
-                "[uvx-client] %s connect to server ok\n", mclient->config.name);
+                "[melo-client] %s connect to server ok\n", mclient->config.name);
 
         assert(conn->handle == (uv_stream_t*) &mclient->uvclient);
         mclient->uvserver = (uv_tcp_t*) conn->handle;
@@ -225,7 +225,7 @@ static void _cb_on_connect(uv_connect_t* conn, int status)
         mclient->uvserver = NULL;
 
         MELO_ERR(mclient->config.log_err,
-                "\n!!! [uvx-client] %s connect to server failed: %s\n",
+                "\n!!! [melo-client] %s connect to server failed: %s\n",
                 mclient->config.name, uv_strerror(status));
 
         MELO_LISTENER(mclient->on_conn_fail, mclient);

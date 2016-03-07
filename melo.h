@@ -49,13 +49,13 @@ extern "C"	{
 typedef unsigned char uint8_t;
 typedef uint8_t bool_t;
 
-#define MELO_ASSERT(expr, msg)            if (expr) {} else { printf(msg); return; }
-#define MELO_ASSERT_RET(expr, msg, ret)   if (expr) {} else { printf(msg); return (ret); }
+#define MELO_ASSERT(expr, msg)            if (expr) {} else { printf("%s:%d %s\n", __FILE__, __LINE__, msg); return; }
+#define MELO_ASSERT_RET(expr, msg, ret)   if (expr) {} else { printf("%s:%d %s\n", __FILE__, __LINE__, msg); return (ret); }
 
 #define MELO_LISTENER(func, ...) if ((func) != NULL) { (func)(__VA_ARGS__); } else {printf("%s not reg\n", #func);}
 
-#define MELO_INFO(fp, ...) if (NULL != (fp)) { fprintf((fp), __VA_ARGS__); }
-#define MELO_ERR(fp, ...)  if (NULL != (fp)) { fprintf((fp), __VA_ARGS__); }
+#define MELO_INFO(fp, ...) if (NULL != (fp)) { fprintf((fp), "%s:%d ", __FILE__, __LINE__); fprintf((fp), __VA_ARGS__); }
+#define MELO_ERR(fp, ...)  if (NULL != (fp)) { fprintf((fp), "%s:%d ", __FILE__, __LINE__); fprintf((fp), __VA_ARGS__); }
 
 
 typedef union melo_sockaddr_s
@@ -85,7 +85,7 @@ const char* melo_get_tcp_ip_port(uv_tcp_t * uvclient, char * ipbuf, int buflen, 
 int melo_send_to_stream(uv_stream_t * stream, void * data, unsigned int size);
 
 // deprecated, use uvx_send_to_stream() instead.
-int melo_send_mem(automem_t* mem, uv_stream_t * stream);
+int melo_send_mem(uv_stream_t * stream, automem_t * mem);
 
 void melo_alloc_buf(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
 
